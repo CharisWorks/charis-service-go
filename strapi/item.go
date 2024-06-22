@@ -75,7 +75,7 @@ func ShiftStock(itemId int, quantity int) error {
 		err = util.NewError("Not enough stock")
 		return err
 	}
-	err = RegisterPrestock(itemId, quantity, item.Data.Attributes.Stock-quantity)
+	err = RegisterPrestock(itemId, item.Data.Attributes.PreStock+quantity, item.Data.Attributes.Stock-quantity)
 	if err != nil {
 		return err
 	}

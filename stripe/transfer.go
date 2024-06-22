@@ -1,0 +1,4 @@
+package stripe
+
+func Transfer() {
+}

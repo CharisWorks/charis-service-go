@@ -16,11 +16,12 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, err error)
 		SuccessURL: stripe.String("https://example.com/success"),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String("price_1PUOqgA3bJzqElth7EJRA5R2"),
-				Quantity: stripe.Int64(2),
+				Price:    stripe.String(priceId),
+				Quantity: stripe.Int64(int64(quantity)),
 			},
 		},
-		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+		BillingAddressCollection: stripe.String(string(stripe.CheckoutSessionBillingAddressCollectionRequired)),
+		Mode:                     stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}
 	result, err := session.New(params)
 	if err != nil {

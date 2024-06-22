@@ -13,7 +13,6 @@ func (h *Handler) SetupStrapiEventHandler() {
 	h.Router.POST("/webhooks/strapi", strapiWebhookMiddleware(), h.StrapiEventHandler)
 	h.Router.POST("/webhooks/strapi/itemregister", strapiWebhookMiddleware(), h.StrapiItemRegisterHandler)
 	h.Router.POST("/webhooks/strapi/itemdelete", strapiWebhookMiddleware(), h.StrapiItemDeleteHandler)
-
 }
 
 func strapiWebhookMiddleware() gin.HandlerFunc {
@@ -23,7 +22,7 @@ func strapiWebhookMiddleware() gin.HandlerFunc {
 }
 
 func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
-	event := &strapi.Item{}
+	event := &strapi.EventItem{}
 	err := ctx.BindJSON(&event)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -46,7 +45,7 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"received": true})
 }
 func (h *Handler) StrapiItemRegisterHandler(ctx *gin.Context) {
-	item := &strapi.Item{}
+	item := &strapi.EventItem{}
 	err := ctx.BindJSON(&item)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -69,7 +68,7 @@ func (h *Handler) StrapiItemRegisterHandler(ctx *gin.Context) {
 }
 
 func (h *Handler) StrapiItemDeleteHandler(ctx *gin.Context) {
-	item := &strapi.Item{}
+	item := &strapi.EventItem{}
 	err := ctx.BindJSON(&item)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)

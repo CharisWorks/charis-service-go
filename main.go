@@ -15,12 +15,14 @@ func main() {
 	h := handler.NewHandler(r)
 	h.SetupStripeEventHandler()
 	h.SetupStrapiEventHandler()
+	h.SetupCheckoutEventHandler()
 	http.ListenAndServe(":8080", r)
 }
 func CORS(r *gin.Engine) {
 	r.Use(cors.New(cors.Config{
 		// アクセス許可するオリジン
 		AllowOrigins: []string{
+			"http://strapi:1337",
 			"http://localhost:1337",
 		},
 		// アクセス許可するHTTPメソッド

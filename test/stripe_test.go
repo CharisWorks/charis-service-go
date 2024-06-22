@@ -1,4 +1,4 @@
-package util
+package test
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ func TestCreatePrice(t *testing.T) {
 	params := &stripe.PriceParams{
 		Currency: stripe.String(string(stripe.CurrencyJPY)),
 		ProductData: &stripe.PriceProductDataParams{
-			ID:   stripe.String("test_1"),
+			ID:   stripe.String("test_2"),
 			Name: stripe.String("test item"),
 		},
 		UnitAmount: stripe.Int64(1000),

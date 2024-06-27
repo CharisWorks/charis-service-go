@@ -6,6 +6,7 @@ import (
 
 	"github.com/charisworks/charisworks-service-go/strapi"
 	"github.com/charisworks/charisworks-service-go/stripe"
+	"github.com/charisworks/charisworks-service-go/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +26,7 @@ func (h *Handler) CheckoutHandler(ctx *gin.Context) {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+
 	ctx.JSON(http.StatusOK, gin.H{"url": url})
 }
 
@@ -37,9 +39,14 @@ func RegisterPendingTransaction(itemId int, quantity int) (redirectUrl string, e
 	if err != nil {
 		return "", err
 	}
-	url, err := stripe.CreateCheckout(priceId.Data.Attributes.PriceId, quantity)
+	if priceId.Data.Attributes.PublishedAt == "" {
+		err = util.NewError("this item is not published")
+		return "", err
+	}
+	url, csId, err := stripe.CreateCheckout(priceId.Data.Attributes.PriceId, quantity)
 	if err != nil {
 		return "", err
 	}
+	strapi.TransactionRegister(csId, itemId, quantity, strapi.Pending)
 	return url, nil
 }

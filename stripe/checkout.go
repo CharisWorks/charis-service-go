@@ -1,6 +1,9 @@
 package stripe
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -8,7 +11,7 @@ import (
 	"github.com/stripe/stripe-go/v76/checkout/session"
 )
 
-func CreateCheckout(priceId string, quantity int) (paymentUrl string, err error) {
+func CreateCheckout(priceId string, quantity int) (paymentUrl string, csId string, err error) {
 	now := time.Now()
 	stripe.Key = os.Getenv("STRIPE_SECRET_API_KEY")
 	params := &stripe.CheckoutSessionParams{
@@ -27,5 +30,17 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, err error)
 	if err != nil {
 		panic(err)
 	}
-	return result.URL, nil
+	log.Print(result.ID)
+
+	// 構造体をJSONにエンコード
+	jsonData, err := json.Marshal(result)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	// JSONデータを表示
+	fmt.Println(string(jsonData))
+
+	return result.URL, result.ID, nil
 }

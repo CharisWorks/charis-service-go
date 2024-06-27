@@ -1,15 +1,14 @@
 package stripe
 
 import (
-	"os"
-
+	"github.com/charisworks/charisworks-service-go/util"
 	"github.com/stripe/stripe-go/v76"
 	_price "github.com/stripe/stripe-go/v76/price"
 )
 
 func CreatePrice(itemName string, price int) (priceId string, err error) {
 	// Create a new price.
-	stripe.Key = os.Getenv("STRIPE_SECRET_API_KEY")
+	stripe.Key = util.STRIPE_SECRET_API_KEY
 
 	params := &stripe.PriceParams{
 		Currency: stripe.String(string(stripe.CurrencyJPY)),
@@ -27,7 +26,7 @@ func CreatePrice(itemName string, price int) (priceId string, err error) {
 }
 func ArchivePrice(priceId string) (err error) {
 	// Deactivate a price.
-	stripe.Key = os.Getenv("STRIPE_SECRET_API_KEY")
+	stripe.Key = util.STRIPE_SECRET_API_KEY
 
 	_, err = _price.Update(priceId, &stripe.PriceParams{
 		Active: stripe.Bool(false),

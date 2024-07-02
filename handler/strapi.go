@@ -13,6 +13,8 @@ func (h *Handler) SetupStrapiEventHandler() {
 	h.Router.POST("/webhooks/strapi", strapiWebhookMiddleware(), h.StrapiEventHandler)
 	h.Router.POST("/webhooks/strapi/create", strapiWebhookMiddleware(), h.StrapiCreateEventHandler)
 	h.Router.POST("/webhooks/strapi/itemdelete", strapiWebhookMiddleware(), h.StrapiItemDeleteHandler)
+	h.Router.POST("/webhooks/strapi/update", strapiWebhookMiddleware(), h.StrapiCreateEventHandler)
+
 }
 
 func strapiWebhookMiddleware() gin.HandlerFunc {
@@ -46,26 +48,55 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"received": true})
 }
 func (h *Handler) StrapiCreateEventHandler(ctx *gin.Context) {
-	event := &strapi.ItemEvent{}
-	err := ctx.BindJSON(&event)
-	if err != nil {
+
+	event := &strapi.Event{}
+	if err := ctx.ShouldBindBodyWithJSON(&event); err != nil {
 		log.Print(event)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	log.Print(event)
-	if event.Model == strapi.ItemModel {
-		priceId, err := stripe.CreatePrice(event.Entry.Name, event.Entry.Price)
+	if event.Model == strapi.ItemModel && event.EventName == strapi.Create {
+		itemEvent := &strapi.ItemEvent{}
+		if err := ctx.ShouldBindBodyWithJSON(&itemEvent); err != nil {
+			ctx.AbortWithStatus(http.StatusBadRequest)
+		}
+		log.Print("itemEvent: ", itemEvent)
+		priceId, err := stripe.CreatePrice(itemEvent.Entry.Name, itemEvent.Entry.Price)
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 		log.Print("successfully registered item: ", priceId)
-		err = strapi.RegisterPriceId(event.Entry.ID, priceId)
+		err = strapi.RegisterPriceId(itemEvent.Entry.ID, priceId)
 		if err != nil {
 			log.Print(err)
 			ctx.AbortWithStatus(http.StatusBadRequest)
 			return
+		}
+	}
+
+	if event.Model == strapi.TransactionModel && event.EventName == strapi.Update {
+		log.Print("transactionEvent")
+		transactionEvent := &strapi.TransactionEvent{}
+		if err := ctx.ShouldBindBodyWithJSON(&transactionEvent); err != nil {
+			log.Print(err)
+			ctx.AbortWithStatus(http.StatusBadRequest)
+		}
+		log.Print("transactionEvent: ", transactionEvent)
+		if transactionEvent.Entry.Status == strapi.ShippedTransaction {
+			//transactionEventの中身を取得
+			transaction, err := strapi.GetTransactionById(transactionEvent.Entry.TransactionID)
+			if err != nil {
+				ctx.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
+			err = ShippingHandler(transaction)
+			if err != nil {
+				ctx.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
+			log.Print("successfully registered transaction: ", transaction.Data[0].ID)
 		}
 	}
 

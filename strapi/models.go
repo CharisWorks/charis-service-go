@@ -7,6 +7,13 @@ type Event struct {
 	Model     ModelName `json:"model"`
 }
 type EventName string
+
+const (
+	Create EventName = "entry.create"
+	Update EventName = "entry.update"
+	Delete EventName = "entry.delete"
+)
+
 type ItemEvent struct {
 	Event
 	ItemEntry
@@ -25,6 +32,26 @@ type ItemEntry struct {
 		PriceId     string `json:"price_id"`
 	} `json:"entry"`
 }
+type TransactionEvent struct {
+	Event
+	TransactionEntry
+}
+type TransactionEntry struct {
+	Entry struct {
+		ID            int             `json:"id"`
+		TransactionID string          `json:"transaction_id"`
+		Status        TransactionType `json:"status"`
+		TrackingID    string          `json:"tracking_id"`
+	} `json:"entry"`
+}
+
+type TransactionType string
+
+const (
+	PendingTransaction TransactionType = "pending"
+	ShippedTransaction TransactionType = "shipped"
+)
+
 type Item struct {
 	Data struct {
 		Id         int `json:"id"`
@@ -49,6 +76,7 @@ type Item struct {
 						UpdatedAt       string `json:"updatedAt"`
 						PublishedAt     string `json:"publishedAt"`
 						StripeAccountID string `json:"stripe_account_id"`
+						Email           string `json:"email"`
 					} `json:"attributes"`
 				} `json:"data"`
 			} `json:"worker"`
@@ -71,6 +99,13 @@ type Attributes struct {
 	TransferID    interface{} `json:"transfer_id"`
 	PaymentIntent string      `json:"payment_intent"`
 	Item          Item        `json:"item"`
+	PostalCode    string      `json:"postal_code"`
+	State         string      `json:"state"`
+	City          string      `json:"city"`
+	Line1         string      `json:"line1"`
+	Line2         string      `json:"line2"`
+	Email         string      `json:"email"`
+	Name          string      `json:"name"`
 }
 
 type Transaction struct {
@@ -97,14 +132,9 @@ type CustomerInfo struct {
 	} `json:"data"`
 }
 
-const (
-	Create EventName = "entry.create"
-	Update EventName = "entry.update"
-	Delete EventName = "entry.delete"
-)
-
 type ModelName string
 
 const (
-	ItemModel ModelName = "item"
+	ItemModel        ModelName = "item"
+	TransactionModel ModelName = "transaction"
 )

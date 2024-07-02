@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/charisworks/charisworks-service-go/strapi"
-	"github.com/charisworks/charisworks-service-go/stripe"
+	_stripe "github.com/charisworks/charisworks-service-go/stripe"
 	"github.com/charisworks/charisworks-service-go/util"
 	"github.com/gin-gonic/gin"
 )
@@ -43,7 +43,7 @@ func RegisterPendingTransaction(itemId int, quantity int) (redirectUrl string, e
 		err = util.NewError("this item is not published")
 		return "", err
 	}
-	url, csId, err := stripe.CreateCheckout(priceId.Data.Attributes.PriceId, quantity)
+	url, csId, err := _stripe.CreateCheckout(priceId.Data.Attributes.PriceId, quantity)
 	if err != nil {
 		return "", err
 	}

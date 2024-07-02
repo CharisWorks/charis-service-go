@@ -23,6 +23,19 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, csId strin
 				Quantity: stripe.Int64(int64(quantity)),
 			},
 		},
+		ShippingOptions: []*stripe.CheckoutSessionShippingOptionParams{
+			{
+				ShippingRateData: &stripe.CheckoutSessionShippingOptionShippingRateDataParams{
+					DisplayName: stripe.String("送料"),
+					Type:        stripe.String("fixed_amount"),
+					FixedAmount: &stripe.CheckoutSessionShippingOptionShippingRateDataFixedAmountParams{
+						Amount:   stripe.Int64(300),
+						Currency: stripe.String(string(stripe.CurrencyJPY)),
+					},
+				},
+			},
+		},
+
 		BillingAddressCollection: stripe.String(string(stripe.CheckoutSessionBillingAddressCollectionRequired)),
 		Mode:                     stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}

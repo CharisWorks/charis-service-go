@@ -11,10 +11,10 @@ import (
 
 func Transfer(amount float64, stripeAccountId string, transactionId string) (transferId string, err error) {
 	stripe.Key = util.STRIPE_SECRET_API_KEY
-	log.Print("Transfering... \n amount: ", float64(amount)*(1-util.MARGIN), "\n stripeID: ", stripeAccountId, "\n transactionId: ", transactionId)
+	log.Print("Transfering... \n amount: ", float64(amount)*(1-util.MARGIN), "+", util.SHIPPING_FEE, "\n stripeID: ", stripeAccountId, "\n transactionId: ", transactionId)
 
 	params := &stripe.TransferParams{
-		Amount:      stripe.Int64(int64(amount * (1 - util.MARGIN))),
+		Amount:      stripe.Int64(int64(int(amount*(1-util.MARGIN)) + util.SHIPPING_FEE)),
 		Currency:    stripe.String(string(stripe.CurrencyJPY)),
 		Destination: stripe.String(stripeAccountId),
 		Description: stripe.String(transactionId),

@@ -13,4 +13,6 @@ var (
 	MAIL_AUTH_PASS        = os.Getenv("MAIL_AUTH_PASS")
 	SMTP_SERVER_ADDR      = os.Getenv("SMTP_SERVER_ADDR")
 	SMTP_SERVER           = os.Getenv("SMTP_SERVER")
+	SHIPPING_FEE          = 300
+	ADMIN_EMAIL           = os.Getenv("ADMIN_EMAIL")
 )

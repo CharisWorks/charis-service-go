@@ -3,17 +3,21 @@ package mail
 import (
 	"fmt"
 	"time"
+
+	"github.com/charisworks/charisworks-service-go/util"
 )
 
 func PurchasedAdminEmailFactory(
 	name string,
 	email string,
-	address string,
+	postalCode string,
+	state string,
+	city string,
+	line1 string,
+	line2 string,
 	itemName string,
 	price int,
 	quantity int,
-	amount int,
-	income int,
 	purchasedAt time.Time,
 ) string {
 	return fmt.Sprintf(`
@@ -22,6 +26,10 @@ func PurchasedAdminEmailFactory(
 名前： %v  
 メールアドレス： %v 
 住所： %v 
+%v
+%v 
+%v 
+%v
 
 --------------------------
 
@@ -37,12 +45,16 @@ func PurchasedAdminEmailFactory(
 	`,
 		name,
 		email,
-		address,
+		postalCode,
+		state,
+		city,
+		line1,
+		line2,
 		itemName,
 		price,
 		quantity,
-		amount,
-		income,
+		price*quantity,
+		price*quantity*int(util.MARGIN),
 		convertToJST(purchasedAt),
 	)
 }
@@ -54,10 +66,13 @@ func PurchasedCustomerEmailFactory(
 	price int,
 	quantity int,
 	shippingFee int,
-	amount int,
 	purchasedAt time.Time,
-	to string,
-	address string,
+	postalCode string,
+	state string,
+	city string,
+	line1 string,
+	line2 string,
+	email string,
 ) string {
 	return fmt.Sprintf(`
 %v 様 
@@ -83,7 +98,12 @@ func PurchasedCustomerEmailFactory(
 【お届け先】
 お名前： %v様
 住所： %v
+%v
+%v
+%v
+%v
 
+Eメール： %v
 --------------------------
 
 商品の発送準備が整いましたら、別途メールにてご連絡いたします。通常、商品の発送には、2,3日程度かかりますので、ご了承ください。
@@ -107,14 +127,25 @@ CharisWorks
 		price,
 		quantity,
 		shippingFee,
-		amount,
+		price*quantity+shippingFee,
 		convertToJST(purchasedAt),
-		to,
-		address)
+		name,
+		postalCode,
+		state,
+		city,
+		line1,
+		line2,
+		email,
+	)
 }
 
 func PurchasedWorkerEmailFactory(
 	name string,
+	postalCode string,
+	state string,
+	city string,
+	line1 string,
+	line2 string,
 	itemName string,
 	price int,
 	quantity int,
@@ -129,46 +160,69 @@ func PurchasedWorkerEmailFactory(
 以下に、ご注文の詳細情報を記載いたします。
 
 --------------------------
-
+【配送先住所】
+お名前： %v様
+住所： %v
+%v
+%v
+%v
+%v
 【商品情報】
-商品名		値段		数量
-%v		%v円		%v個
+商品名：%v		
+値段：%v円		
+数量：%v個
 売上： %v 円
+送料： %v円
 購入日時： %v
 
+
+なお、商品の発送準備が整いましたら、strapiにて追跡番号の登録をお願いいたします。
 --------------------------
 CharisWorks
 
 お客様相談室:contact@charis.works
 `,
 		name,
+		name,
+		postalCode,
+		state,
+		city,
+		line1,
+		line2,
 		itemName,
 		price,
 		quantity,
 		amount,
+		util.SHIPPING_FEE,
 		convertToJST(purchasedAt),
 	)
 }
 
-func SendAdminShippedEmail(
+func ShippingAdminEmailFactory(
+	transactionId string,
 	name string,
 	mail string,
-	address string,
+	postalCode string,
+	state string,
+	city string,
+	line1 string,
+	line2 string,
 	itemName string,
 	price int,
 	quantity int,
-	amount int,
-	income int,
 	purchasedAt time.Time,
 ) string {
 	return fmt.Sprintf(`
 発送が完了しました。
-
+取引ID： %v
 購入者情報：
 名前： %v  
 メールアドレス： %v 
 住所： %v 
-
+%v
+%v
+%v
+%v
 --------------------------
 
 商品情報：
@@ -180,28 +234,36 @@ func SendAdminShippedEmail(
 --------------------------
 合計売上： %v 
 購入日時： %v `,
+		transactionId,
 		name,
 		mail,
-		address,
+		postalCode,
+		state,
+		city,
+		line1,
+		line2,
 		itemName,
 		price,
 		quantity,
-		amount,
-		income,
+		price*quantity,
+		float64(price*quantity)*(1-util.MARGIN),
 		convertToJST(purchasedAt),
 	)
 }
-func SendCustomerShippedEmail(
+func ShippingCustomerEmailFactory(
 	transactionId string,
 	trackingId string,
 	itemName string,
 	price int,
 	quantity int,
-	shippingFee int,
-	totalAmount int,
 	purchasedAt time.Time,
+	email string,
 	name string,
-	address string,
+	postalCode string,
+	state string,
+	city string,
+	line1 string,
+	line2 string,
 ) string {
 	return fmt.Sprintf(`
 %v 様 
@@ -217,8 +279,9 @@ func SendCustomerShippedEmail(
 --------------------------
 
 【ご注文情報】
-商品名		値段		数量
-%v		%v円		%v個
+商品名： %v		
+値段： %v円
+数量： %v個
 			
 送料： %v円
 合計金額： %v 円
@@ -229,7 +292,12 @@ func SendCustomerShippedEmail(
 【お届け先】
 お名前： %v様
 住所： %v
+%v
+%v
+%v
+%v
 
+Eメール： %v
 --------------------------
 
 商品の返品・返金に致しましては、商品到着後7日以内にお問い合わせフォームよりご連絡ください。商品の状態を確認の上、返品・返金の手続きをさせていただきます。
@@ -248,13 +316,95 @@ CharisWorks
 		itemName,
 		price,
 		quantity,
-		shippingFee,
-		totalAmount,
+		util.SHIPPING_FEE,
+		price*quantity+util.SHIPPING_FEE,
 		convertToJST(purchasedAt),
 		name,
-		address)
+		postalCode,
+		state,
+		city,
+		line1,
+		line2,
+		email,
+	)
 }
+func RefundedWorkerEmailFactory(
+	name string,
+	transactionId string,
+	itemName string,
+	price int,
+	quantity int,
+	purchasedAt time.Time,
+) string {
+	return fmt.Sprintf(`
+%v 様
 
+取引がキャンセルされました。
+以下に、ご注文の詳細情報を記載いたします。
+
+--------------------------
+取引ID： %v
+【商品情報】
+商品名：%v		
+値段：%v円		
+数量：%v個
+購入日時： %v
+
+
+--------------------------
+CharisWorks
+
+お客様相談室:contact@charis.works
+`,
+		name,
+		transactionId,
+		itemName,
+		price,
+		quantity,
+		convertToJST(purchasedAt),
+	)
+}
+func RefundedCustomerEmailFactory(
+	name string,
+	transactionId string,
+	itemName string,
+	price int,
+	quantity int,
+	purchasedAt time.Time,
+) string {
+	return fmt.Sprintf(`
+%v 様
+
+取引がキャンセルされました。
+以下に、ご注文の詳細情報を記載いたします。
+
+--------------------------
+取引ID： %v
+【商品情報】
+商品名：%v		
+値段：%v円		
+数量：%v個
+購入日時： %v
+
+
+返金手続きは完了しております。ご確認ください。
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+今後とも、CharisWorksをご愛顧いただきますようお願い申し上げます。
+--------------------------
+CharisWorks
+
+お客様相談室:contact@charis.works
+`,
+		name,
+		transactionId,
+		itemName,
+		price,
+		quantity,
+		convertToJST(purchasedAt),
+	)
+}
 func convertToJST(utcTime time.Time) string {
 	loc, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {

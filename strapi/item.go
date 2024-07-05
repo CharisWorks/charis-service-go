@@ -41,7 +41,7 @@ func RegisterStockAndPrestock(itemId int, prestock int, stock int) error {
 
 func GetItem(itemId int) (*Item, error) {
 	// Get the price id.
-	res, err := requestToStrapi(GET, "/items/"+strconv.Itoa(itemId)+"?populate[0]=worker", nil)
+	res, err := requestToStrapi(GET, "/items/"+strconv.Itoa(itemId)+"?populate[0]=worker&populate[1]=images&populate[2]=tag", nil)
 	if err != nil {
 		return nil, err
 	}

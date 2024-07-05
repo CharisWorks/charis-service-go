@@ -9,9 +9,11 @@ type Event struct {
 type EventName string
 
 const (
-	Create EventName = "entry.create"
-	Update EventName = "entry.update"
-	Delete EventName = "entry.delete"
+	Create    EventName = "entry.create"
+	Update    EventName = "entry.update"
+	Delete    EventName = "entry.delete"
+	Publish   EventName = "entry.publish"
+	Unpublish EventName = "entry.unpublish"
 )
 
 type ItemEvent struct {
@@ -80,6 +82,42 @@ type Item struct {
 					} `json:"attributes"`
 				} `json:"data"`
 			} `json:"worker"`
+			Images Images `json:"images"`
+			Tag    struct {
+				ID    int    `json:"id"`
+				Color string `json:"color"`
+				Size  string `json:"size"`
+			} `json:"tag"`
+		} `json:"attributes"`
+	} `json:"data"`
+}
+type Images struct {
+	Data []struct {
+		ID         int `json:"id"`
+		Attributes struct {
+			Name            string `json:"name"`
+			AlternativeText string `json:"alternativeText"`
+			Caption         string `json:"caption"`
+			Width           int    `json:"width"`
+			Height          int    `json:"height"`
+			Formats         struct {
+				Thumbnail struct {
+					Url  string `json:"url"`
+					Hash string `json:"hash"`
+				} `json:"thumbnail"`
+				Small struct {
+					Url  string `json:"url"`
+					Hash string `json:"hash"`
+				} `json:"small"`
+				Medium struct {
+					Url  string `json:"url"`
+					Hash string `json:"hash"`
+				} `json:"medium"`
+				Large struct {
+					Url  string `json:"url"`
+					Hash string `json:"hash"`
+				} `json:"large"`
+			} `json:"formats"`
 		} `json:"attributes"`
 	} `json:"data"`
 }

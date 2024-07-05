@@ -32,9 +32,6 @@ func (h *Handler) CheckoutHandler(ctx *gin.Context) {
 
 func RegisterPendingTransaction(itemId int, quantity int) (redirectUrl string, err error) {
 	// Register a pending transaction.
-	if err := strapi.ShiftStock(itemId, quantity); err != nil {
-		return "", err
-	}
 	priceId, err := strapi.GetItem(itemId)
 	if err != nil {
 		return "", err
@@ -43,10 +40,15 @@ func RegisterPendingTransaction(itemId int, quantity int) (redirectUrl string, e
 		err = util.NewError("this item is not published")
 		return "", err
 	}
+	if err := strapi.ShiftStock(itemId, quantity); err != nil {
+		return "", err
+	}
 	url, csId, err := _stripe.CreateCheckout(priceId.Data.Attributes.PriceId, quantity)
 	if err != nil {
 		return "", err
 	}
-	strapi.TransactionRegister(csId, itemId, quantity, strapi.Pending)
+	if err := strapi.TransactionRegister(csId, itemId, quantity, strapi.Pending); err != nil {
+		return "", err
+	}
 	return url, nil
 }

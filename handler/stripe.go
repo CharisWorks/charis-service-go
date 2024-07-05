@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -53,7 +54,13 @@ func (h *Handler) StripeEventHandler(ctx *gin.Context) {
 
 	// JSONデータを表示
 	fmt.Println(string(jsonData))
-
+	log.Printf(`
+	*************************************************
+	Stripe Webhook was received!
+	Event ID: %s
+	Type: %s
+	*************************************************
+	`, event.ID, event.Type)
 	switch event.Type {
 	case stripe.EventTypeCheckoutSessionCompleted:
 		err := CheckoutSessionCompleteHandler(event)

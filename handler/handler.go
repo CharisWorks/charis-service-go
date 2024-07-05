@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/charisworks/charisworks-service-go/images"
 	"github.com/charisworks/charisworks-service-go/mail"
 	"github.com/charisworks/charisworks-service-go/strapi"
 	"github.com/charisworks/charisworks-service-go/util"
@@ -15,11 +16,14 @@ import (
 	"github.com/stripe/stripe-go/v76"
 )
 
+var r2conns = images.R2Conns{}
+
 type Handler struct {
 	Router *gin.Engine
 }
 
 func NewHandler(router *gin.Engine) *Handler {
+	r2conns.Init()
 	return &Handler{
 		Router: router,
 	}
@@ -230,7 +234,11 @@ func ShippingHandler(transaction *strapi.Transaction) (err error) {
 	); err != nil {
 		return err
 	}
-	if err := mail.SendEmail(transaction.Data[0].Attributes.Item.Data.Attributes.Worker.Data.Attributes.Email, "商品が発送されました",
+	item, err := strapi.GetItem(transaction.Data[0].Attributes.Item.Data.Id)
+	if err != nil {
+		return err
+	}
+	if err := mail.SendEmail(item.Data.Attributes.Worker.Data.Attributes.Email, "商品が発送されました",
 		mail.ShippingAdminEmailFactory(
 			transaction.Data[0].Attributes.TransactionID,
 			transaction.Data[0].Attributes.Name,

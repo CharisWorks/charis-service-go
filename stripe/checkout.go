@@ -3,7 +3,6 @@ package stripe
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -43,7 +42,6 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, csId strin
 	if err != nil {
 		panic(err)
 	}
-	log.Print(result.ID)
 
 	// 構造体をJSONにエンコード
 	jsonData, err := json.Marshal(result)

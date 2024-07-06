@@ -1,7 +1,7 @@
 package stripe
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/charisworks/charisworks-service-go/util"
 	"github.com/stripe/stripe-go/v76"
@@ -11,7 +11,16 @@ import (
 
 func Transfer(amount float64, stripeAccountId string, transactionId string) (transferId string, err error) {
 	stripe.Key = util.STRIPE_SECRET_API_KEY
-	log.Print("Transfering... \n amount: ", float64(amount)*(1-util.MARGIN), "+", util.SHIPPING_FEE, "\n stripeID: ", stripeAccountId, "\n transactionId: ", transactionId)
+	util.Logger(
+		fmt.Sprintf(
+			`
+			Transfering... 
+			amount: %v
+			stripeID: %v
+			transactionId: %v
+			`, float64(amount)*(1-util.MARGIN), stripeAccountId, transactionId,
+		),
+	)
 
 	params := &stripe.TransferParams{
 		Amount:      stripe.Int64(int64(int(amount*(1-util.MARGIN)) + util.SHIPPING_FEE)),
@@ -23,20 +32,20 @@ func Transfer(amount float64, stripeAccountId string, transactionId string) (tra
 	if err != nil {
 		return "", err
 	}
-	log.Print(tr.ID)
+	util.Logger(tr.ID)
 	return tr.ID, nil
 }
 
 func ReverseTransfer(transferId string) (err error) {
 	stripe.Key = util.STRIPE_SECRET_API_KEY
-	log.Print("Reversing transfer... \n ")
+	util.Logger("Reversing transfer... \n ")
 	reverseParams := &stripe.TransferReversalParams{
 		ID: stripe.String(transferId),
 	}
 	transferResult, err := transferreversal.New(reverseParams)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-	log.Print(transferResult)
+	util.Logger(transferResult.ID)
 	return
 }

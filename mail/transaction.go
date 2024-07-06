@@ -1,7 +1,7 @@
 package mail
 
 import (
-	"log"
+	"fmt"
 	"net/smtp"
 
 	"github.com/charisworks/charisworks-service-go/util"
@@ -19,17 +19,20 @@ func SendEmail(to string, subject string, body string) error {
 	header["From"] = "CharisWorks本部" + " <" + from + ">"
 	header["To"] = to
 	header["Subject"] = subject
-	log.Printf(`
-**********************************************************************************************
-Sending Email...
-from: %s
-to: %s
-subject: %s
-**********************************************************************************************
-`,
-		header["From"],
-		header["To"],
-		header["Subject"],
+	util.Logger(
+		fmt.Sprintf(
+			`
+			**********************************************************************************************
+			Sending Email...
+			from: %s
+			to: %s
+			subject: %s
+			**********************************************************************************************
+			`,
+			header["From"],
+			header["To"],
+			header["Subject"],
+		),
 	)
 	// メール本文の作成
 	message := ""
@@ -41,9 +44,9 @@ subject: %s
 		smtp.PlainAuth("", authmail, password, smtp_server),
 		from, []string{to}, []byte(message))
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	} else {
-		log.Println("Email sent successfully!")
+		util.Logger("Email sent successfully!")
 	}
 	return nil
 }

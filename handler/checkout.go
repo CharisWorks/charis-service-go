@@ -20,7 +20,7 @@ func (h *Handler) CheckoutHandler(ctx *gin.Context) {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	url, err := RegisterPendingTransaction(payload.ItemId, payload.Quantity)
+	url, err := registerPendingTransaction(payload.ItemId, payload.Quantity)
 	if err != nil {
 		log.Print(err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
@@ -30,7 +30,7 @@ func (h *Handler) CheckoutHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"url": url})
 }
 
-func RegisterPendingTransaction(itemId int, quantity int) (redirectUrl string, err error) {
+func registerPendingTransaction(itemId int, quantity int) (redirectUrl string, err error) {
 	// Register a pending transaction.
 	priceId, err := strapi.GetItem(itemId)
 	if err != nil {

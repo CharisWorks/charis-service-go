@@ -13,40 +13,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) SetupStrapiEventHandler() {
-	h.Router.POST("/webhooks/strapi", strapiWebhookMiddleware(), h.StrapiEventHandler)
-}
-
 func strapiWebhookMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 	}
 }
 
-// func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
-// 	event := &strapi.Event{}
-// 	err := ctx.BindJSON(&event)
-// 	if err != nil {
-// 		log.Print(event)
-// 		ctx.AbortWithStatus(http.StatusBadRequest)
-// 		return
-// 	}
-// 	log.Print(event)
-// 	// body, err := io.ReadAll(ctx.Request.Body)
-// 	// if err != nil {
-// 	// 	ctx.AbortWithStatus(http.StatusBadRequest)
-// 	// 	return
-// 	// }
-
-// 	// // リクエストメソッドとURLを表示
-// 	// fmt.Printf("Received %s request to %s\n", ctx.Request.Method, ctx.Request.RequestURI)
-
-// 	// // リクエストボディを表示
-// 	// fmt.Printf("Request body: %s\n", body)
-
-//		// 200 OKを返す
-//		ctx.JSON(http.StatusOK, gin.H{"received": true})
-//	}
 func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 
 	event := &strapi.Event{}
@@ -65,21 +37,12 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 
 	if event.Model == strapi.ItemModel {
 		switch event.EventName {
-		case strapi.Create:
-			// itemEvent := &strapi.ItemEvent{}
-			// if err := ctx.ShouldBindBodyWithJSON(&itemEvent); err != nil {
-			// 	ctx.AbortWithStatus(http.StatusBadRequest)
-			// }
-			// if err := ItemCreateHandler(itemEvent); err != nil {
-			// 	ctx.AbortWithStatus(http.StatusBadRequest)
-			// 	return
-			// }
 		case strapi.Update:
 			itemEvent := &strapi.ItemEvent{}
 			if err := ctx.ShouldBindBodyWithJSON(&itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 			}
-			if err := ItemUpdateHandler(itemEvent); err != nil {
+			if err := itemUpdateHandler(itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 				return
 			}
@@ -88,7 +51,7 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 			if err := ctx.ShouldBindBodyWithJSON(&itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 			}
-			if err := ItemPublishHandler(itemEvent); err != nil {
+			if err := itemPublishHandler(itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 				return
 			}
@@ -97,7 +60,7 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 			if err := ctx.ShouldBindBodyWithJSON(&itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 			}
-			if err := ItemUnpublishHandler(itemEvent); err != nil {
+			if err := itemUnpublishHandler(itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 				return
 			}
@@ -106,7 +69,7 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 			if err := ctx.ShouldBindBodyWithJSON(&itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 			}
-			if err := ItemDeleteHandler(itemEvent); err != nil {
+			if err := itemDeleteHandler(itemEvent); err != nil {
 				ctx.AbortWithStatus(http.StatusBadRequest)
 				return
 			}
@@ -130,7 +93,7 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 					ctx.AbortWithStatus(http.StatusBadRequest)
 					return
 				}
-				err = ShippingHandler(transaction)
+				err = shippingHandler(transaction)
 				if err != nil {
 					ctx.AbortWithStatus(http.StatusBadRequest)
 					return
@@ -144,45 +107,7 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"received": true})
 }
 
-// func ItemCreateHandler(itemEvent *strapi.ItemEvent) (err error) {
-// 	priceId, err := stripe.CreatePrice(itemEvent.Entry.Name, itemEvent.Entry.Price)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	log.Print("successfully registered item: ", priceId)
-// 	err = strapi.RegisterPriceId(itemEvent.Entry.ID, priceId)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	item, err := strapi.GetItem(itemEvent.Entry.ID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if item.Data.Attributes.PublishedAt == "" {
-// 		return nil
-// 	}
-// 	if err := meilisearch.RegisterItemToMeilisearch(
-// 		[]meilisearch.Item{
-// 			{
-// 				ID:          strconv.Itoa(item.Data.Id),
-// 				ItemName:    item.Data.Attributes.Name,
-// 				Price:       item.Data.Attributes.Price,
-// 				Stock:       item.Data.Attributes.Stock,
-// 				Description: item.Data.Attributes.Description,
-// 				Genre:       item.Data.Attributes.Genre,
-// 				CreatedAt:   item.Data.Attributes.CreatedAt,
-// 				UpdatedAt:   item.Data.Attributes.UpdatedAt,
-// 				PublishedAt: item.Data.Attributes.PublishedAt,
-// 				Worker:      item.Data.Attributes.Worker.Data.Attributes.UserName,
-// 			},
-// 		},
-// 	); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-func ItemPublishHandler(itemEvent *strapi.ItemEvent) (err error) {
+func itemPublishHandler(itemEvent *strapi.ItemEvent) (err error) {
 	item, err := strapi.GetItem(itemEvent.Entry.ID)
 	if err != nil {
 		return err
@@ -202,20 +127,38 @@ func ItemPublishHandler(itemEvent *strapi.ItemEvent) (err error) {
 			return err
 		}
 	}
+	Image := new([]meilisearch.Images)
+	for _, img := range item.Data.Attributes.Images.Data {
 
+		i := meilisearch.Images{}
+		if img.Attributes.Formats.Small.Url != "" {
+			i.SmallUrl = util.IMAGES_URL + "/" + strconv.Itoa(item.Data.Id) + "/" + img.Attributes.Formats.Small.Hash
+		}
+		if img.Attributes.Formats.Medium.Url != "" {
+			i.MediumUrl = util.IMAGES_URL + "/" + strconv.Itoa(item.Data.Id) + "/" + img.Attributes.Formats.Medium.Hash
+		}
+		if img.Attributes.Formats.Large.Url != "" {
+			i.LargeUrl = util.IMAGES_URL + "/" + strconv.Itoa(item.Data.Id) + "/" + img.Attributes.Formats.Large.Hash
+		}
+		*Image = append(*Image, i)
+	}
 	if err := meilisearch.RegisterItemToMeilisearch(
 		[]meilisearch.Item{
 			{
-				ID:          strconv.Itoa(item.Data.Id),
-				ItemName:    item.Data.Attributes.Name,
-				Price:       item.Data.Attributes.Price,
-				Stock:       item.Data.Attributes.Stock,
-				Description: item.Data.Attributes.Description,
-				Genre:       item.Data.Attributes.Genre,
-				CreatedAt:   item.Data.Attributes.CreatedAt,
-				UpdatedAt:   item.Data.Attributes.UpdatedAt,
-				PublishedAt: item.Data.Attributes.PublishedAt,
-				Worker:      item.Data.Attributes.Worker.Data.Attributes.UserName,
+				ID:                strconv.Itoa(item.Data.Id),
+				ItemName:          item.Data.Attributes.Name,
+				Price:             item.Data.Attributes.Price,
+				Stock:             item.Data.Attributes.Stock,
+				Description:       item.Data.Attributes.Description,
+				Genre:             item.Data.Attributes.Genre,
+				CreatedAt:         item.Data.Attributes.CreatedAt,
+				UpdatedAt:         item.Data.Attributes.UpdatedAt,
+				PublishedAt:       item.Data.Attributes.PublishedAt,
+				Worker:            item.Data.Attributes.Worker.Data.Attributes.UserName,
+				WorkerDescription: item.Data.Attributes.Worker.Data.Attributes.Description,
+				ThumbnailUrl:      util.IMAGES_URL + "/" + strconv.Itoa(item.Data.Id) + "/" + item.Data.Attributes.Images.Data[0].Attributes.Formats.Thumbnail.Hash,
+				Images:            *Image,
+				Tags:              []string{item.Data.Attributes.Tag.Color, item.Data.Attributes.Tag.Size},
 			},
 		},
 	); err != nil {
@@ -223,7 +166,7 @@ func ItemPublishHandler(itemEvent *strapi.ItemEvent) (err error) {
 	}
 	return nil
 }
-func ItemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
+func itemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
 	item, err := strapi.GetItem(itemEvent.Entry.ID)
 	if err != nil {
 		return err
@@ -284,19 +227,20 @@ func ItemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
 	if err := meilisearch.RegisterItemToMeilisearch(
 		[]meilisearch.Item{
 			{
-				ID:           strconv.Itoa(item.Data.Id),
-				ItemName:     item.Data.Attributes.Name,
-				Price:        item.Data.Attributes.Price,
-				Stock:        item.Data.Attributes.Stock,
-				Description:  item.Data.Attributes.Description,
-				Genre:        item.Data.Attributes.Genre,
-				CreatedAt:    item.Data.Attributes.CreatedAt,
-				UpdatedAt:    item.Data.Attributes.UpdatedAt,
-				PublishedAt:  item.Data.Attributes.PublishedAt,
-				Worker:       item.Data.Attributes.Worker.Data.Attributes.UserName,
-				ThumbnailUrl: util.IMAGES_URL + "/" + strconv.Itoa(item.Data.Id) + "/" + item.Data.Attributes.Images.Data[0].Attributes.Formats.Thumbnail.Hash,
-				Images:       *Image,
-				Tags:         []string{item.Data.Attributes.Tag.Color, item.Data.Attributes.Tag.Size},
+				ID:                strconv.Itoa(item.Data.Id),
+				ItemName:          item.Data.Attributes.Name,
+				Price:             item.Data.Attributes.Price,
+				Stock:             item.Data.Attributes.Stock,
+				Description:       item.Data.Attributes.Description,
+				Genre:             item.Data.Attributes.Genre,
+				CreatedAt:         item.Data.Attributes.CreatedAt,
+				UpdatedAt:         item.Data.Attributes.UpdatedAt,
+				PublishedAt:       item.Data.Attributes.PublishedAt,
+				Worker:            item.Data.Attributes.Worker.Data.Attributes.UserName,
+				WorkerDescription: item.Data.Attributes.Worker.Data.Attributes.Description,
+				ThumbnailUrl:      util.IMAGES_URL + "/" + strconv.Itoa(item.Data.Id) + "/" + item.Data.Attributes.Images.Data[0].Attributes.Formats.Thumbnail.Hash,
+				Images:            *Image,
+				Tags:              []string{item.Data.Attributes.Tag.Color, item.Data.Attributes.Tag.Size},
 			},
 		},
 	); err != nil {
@@ -305,7 +249,7 @@ func ItemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
 	return nil
 }
 
-func ItemUnpublishHandler(itemEvent *strapi.ItemEvent) (err error) {
+func itemUnpublishHandler(itemEvent *strapi.ItemEvent) (err error) {
 	if err := meilisearch.DeleteItemFromMeilisearch(strconv.Itoa(itemEvent.Entry.ID)); err != nil {
 		return err
 	}
@@ -321,7 +265,7 @@ func ItemUnpublishHandler(itemEvent *strapi.ItemEvent) (err error) {
 	return nil
 }
 
-func ItemDeleteHandler(itemEvent *strapi.ItemEvent) (err error) {
+func itemDeleteHandler(itemEvent *strapi.ItemEvent) (err error) {
 	if err := stripe.ArchivePrice(itemEvent.Entry.PriceId); err != nil {
 		return err
 	}

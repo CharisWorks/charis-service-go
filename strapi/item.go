@@ -59,7 +59,6 @@ func ShiftStock(itemId int, quantity int) error {
 	if err != nil {
 		return err
 	}
-	log.Print(item)
 	if item.Data.Attributes.Stock < quantity {
 		err = util.NewError("Not enough stock")
 		return err

@@ -3,7 +3,6 @@ package images
 import (
 	"context"
 	"flag"
-	"log"
 	"os"
 
 	"github.com/charisworks/charisworks-service-go/util"
@@ -35,17 +34,15 @@ func (r *R2Conns) Init() {
 		util.R2_ACCESS_KEY_SECRET,
 	).Connect(context.TODO())
 	if err != nil {
-		log.Fatalf("r2 client conneciton error :%v\n", err)
+		panic(err)
 	}
 	r.ctx = context.Background()
 	r.Crud = r2.NewR2CRUD(util.R2_BUCKET_NAME, client, 60)
-	log.Println("r2 client connection success")
 }
 
 func (r *R2Conns) UploadImage(filepath string, path string) error {
 	filedata, err := PathToByte(filepath)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 
@@ -55,13 +52,10 @@ func (r *R2Conns) UploadImage(filepath string, path string) error {
 func (r *R2Conns) GetImages(path string) ([]string, error) {
 	objects, err := r.Crud.ListObjects(r.ctx, path)
 	if err != nil {
-		log.Print(err)
 		return nil, err
 	}
-	log.Print(objects)
 	var images []string
 	for _, obj := range objects.Contents {
-		log.Print(*obj.Key)
 		images = append(images, *obj.Key)
 	}
 	return images, nil
@@ -70,7 +64,6 @@ func (r *R2Conns) GetImages(path string) ([]string, error) {
 func (r *R2Conns) DeleteImage(path string) error {
 	err := r.Crud.DeleteObject(r.ctx, path)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	return nil
@@ -78,19 +71,16 @@ func (r *R2Conns) DeleteImage(path string) error {
 func PathToByte(path string) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		log.Print(err)
 		return nil, err
 	}
 	defer file.Close()
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.Print(err)
 		return nil, err
 	}
 	fileBytes := make([]byte, fileInfo.Size())
 	_, err = file.Read(fileBytes)
 	if err != nil {
-		log.Print(err)
 		return nil, err
 	}
 
@@ -101,13 +91,11 @@ func PathToByte(path string) ([]byte, error) {
 func FileToByte(file *os.File) ([]byte, error) {
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.Print(err)
 		return nil, err
 	}
 	fileBytes := make([]byte, fileInfo.Size())
 	_, err = file.Read(fileBytes)
 	if err != nil {
-		log.Print(err)
 		return nil, err
 	}
 

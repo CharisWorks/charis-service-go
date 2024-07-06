@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,17 +23,20 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 
 	event := &strapi.Event{}
 	if err := ctx.ShouldBindBodyWithJSON(&event); err != nil {
-		log.Print(event)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	log.Printf(`
-	*************************************************
-	Strapi Event was received!
-	Model: %v
-	EventName: %v
-	*************************************************
-	`, event.Model, event.EventName)
+	util.Logger(
+		fmt.Sprintf(
+			`
+			*************************************************
+			Strapi Event was received!
+			Model: %v
+			EventName: %v
+			*************************************************
+			`, event.Model, event.EventName,
+		),
+	)
 
 	if event.Model == strapi.ItemModel {
 		switch event.EventName {
@@ -79,13 +82,10 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 	if event.Model == strapi.TransactionModel {
 		switch event.EventName {
 		case strapi.Update:
-			log.Print("transactionEvent")
 			transactionEvent := &strapi.TransactionEvent{}
 			if err := ctx.ShouldBindBodyWithJSON(&transactionEvent); err != nil {
-				log.Print(err)
 				ctx.AbortWithStatus(http.StatusBadRequest)
 			}
-			log.Print("transactionEvent: ", transactionEvent)
 			if transactionEvent.Entry.Status == strapi.ShippedTransaction {
 				//transactionEventの中身を取得
 				transaction, err := strapi.GetTransactionById(transactionEvent.Entry.TransactionID)
@@ -98,7 +98,6 @@ func (h *Handler) StrapiEventHandler(ctx *gin.Context) {
 					ctx.AbortWithStatus(http.StatusBadRequest)
 					return
 				}
-				log.Print("successfully registered transaction: ", transaction.Data[0].ID)
 			}
 		}
 	}
@@ -121,7 +120,6 @@ func itemPublishHandler(itemEvent *strapi.ItemEvent) (err error) {
 			return err
 		}
 
-		log.Print("successfully registered item: ", priceId)
 		err = strapi.RegisterPriceId(itemEvent.Entry.ID, priceId)
 		if err != nil {
 			return err
@@ -174,7 +172,8 @@ func itemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
 	if item.Data.Attributes.PublishedAt == "" {
 		return nil
 	}
-	log.Printf(`
+	util.Logger(
+		fmt.Sprintf(`
 	*************************************************
 	Item was updated!
 	ID: %v
@@ -182,7 +181,8 @@ func itemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
 	Image: %v
 	*************************************************
 	`,
-		item.Data.Id, item.Data.Attributes.Name, item.Data.Attributes.Images.Data[0].Attributes.Formats.Medium.Url)
+			item.Data.Id, item.Data.Attributes.Name, item.Data.Attributes.Images.Data[0].Attributes.Formats.Medium.Url),
+	)
 	if err := r2conns.UploadImage("."+item.Data.Attributes.Images.Data[0].Attributes.Formats.Thumbnail.Url, strconv.Itoa(item.Data.Id)+"/"+item.Data.Attributes.Images.Data[0].Attributes.Formats.Thumbnail.Hash); err != nil {
 		return err
 	}
@@ -203,11 +203,12 @@ func itemUpdateHandler(itemEvent *strapi.ItemEvent) (err error) {
 			}
 		}
 	}
-	log.Println(`
-	*************************************************
-	Images were uploaded!
-	*************************************************
-		`)
+	util.Logger(
+		`
+*************************************************
+Images were uploaded!
+*************************************************
+			`)
 	Image := new([]meilisearch.Images)
 	for _, img := range item.Data.Attributes.Images.Data {
 

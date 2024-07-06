@@ -3,6 +3,7 @@ package util
 import "os"
 
 var (
+	PRODUCTION = false
 	// Constants
 	MARGIN       = 0.05
 	SHIPPING_FEE = 300

@@ -24,6 +24,7 @@ func CORS(r *gin.Engine) {
 		AllowOrigins: []string{
 			"http://strapi:1337",
 			"http://localhost:1337",
+			"http://localhost:3000",
 		},
 		// アクセス許可するHTTPメソッド
 		AllowMethods: []string{

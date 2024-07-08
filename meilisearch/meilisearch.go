@@ -7,11 +7,30 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 )
 
+var Client = meilisearch.NewClient(meilisearch.ClientConfig{
+	Host:   util.MEILI_URL,
+	APIKey: util.MEILI_MASTER_KEY,
+})
+
+func InitMeilisearch() error {
+	_, err := Client.Index(util.MEILI_ITEM_INDEX).UpdateDistinctAttribute(util.MEILI_ITEM_INDEX_IDENTIFIER)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func GetItemByID(itemId string) (*Item, error) {
+	var item Item
+	err := Client.Index(util.MEILI_ITEM_INDEX).GetDocument(itemId, &meilisearch.DocumentQuery{
+		Fields: []string{"*"},
+	}, &item)
+	if err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+}
 func RegisterItemToMeilisearch(item []Item) error {
-	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   util.MEILI_URL,
-		APIKey: util.MEILI_MASTER_KEY,
-	})
 	var items []map[string]interface{}
 	jsonData, err := json.Marshal(item)
 	if err != nil {
@@ -19,7 +38,7 @@ func RegisterItemToMeilisearch(item []Item) error {
 	}
 	json.Unmarshal(jsonData, &items)
 
-	_, err = client.Index(util.MEILI_ITEM_INDEX).AddDocuments(items, util.MEILI_ITEM_INDEX_IDENTIFIER)
+	_, err = Client.Index(util.MEILI_ITEM_INDEX).AddDocuments(items, util.MEILI_ITEM_INDEX_IDENTIFIER)
 	if err != nil {
 		return err
 	}
@@ -27,22 +46,15 @@ func RegisterItemToMeilisearch(item []Item) error {
 }
 
 func DeleteItemFromMeilisearch(itemId string) error {
-	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   util.MEILI_URL,
-		APIKey: util.MEILI_MASTER_KEY,
-	})
-	_, err := client.Index(util.MEILI_ITEM_INDEX).DeleteDocument(itemId)
+	_, err := Client.Index(util.MEILI_ITEM_INDEX).DeleteDocument(itemId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
+
 func ResetMeilisearch() error {
-	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   util.MEILI_URL,
-		APIKey: util.MEILI_MASTER_KEY,
-	})
-	_, err := client.Index(util.MEILI_ITEM_INDEX).DeleteAllDocuments()
+	_, err := Client.Index(util.MEILI_ITEM_INDEX).DeleteAllDocuments()
 	if err != nil {
 		return err
 	}

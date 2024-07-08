@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/charisworks/charisworks-service-go/handler"
+	"github.com/charisworks/charisworks-service-go/meilisearch"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -13,9 +14,11 @@ func main() {
 	r := gin.Default()
 	CORS(r)
 	h := handler.NewHandler(r)
+	meilisearch.InitMeilisearch()
 	h.SetupStripeEventHandler()
 	h.SetupStrapiEventHandler()
 	h.SetupCheckoutEventHandler()
+	h.SetupItmeHandler()
 	http.ListenAndServe(":8080", r)
 }
 func CORS(r *gin.Engine) {

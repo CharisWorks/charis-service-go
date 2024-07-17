@@ -3,7 +3,9 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/charisworks/charisworks-service-go/meilisearch"
 	"github.com/charisworks/charisworks-service-go/strapi"
 	_stripe "github.com/charisworks/charisworks-service-go/stripe"
 	"github.com/charisworks/charisworks-service-go/util"
@@ -48,6 +50,16 @@ func registerPendingTransaction(itemId int, quantity int) (redirectUrl string, e
 		return "", err
 	}
 	if err := strapi.TransactionRegister(csId, itemId, quantity, strapi.Pending); err != nil {
+		return "", err
+	}
+	item, err := meilisearch.GetItemByID(strconv.Itoa(itemId))
+	if err != nil {
+		return "", err
+	}
+	item.Stock -= quantity
+	items := []meilisearch.Item{}
+	items = append(items, *item)
+	if err := meilisearch.RegisterItemToMeilisearch(items); err != nil {
 		return "", err
 	}
 	return url, nil

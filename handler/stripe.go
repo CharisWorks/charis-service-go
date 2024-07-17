@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/charisworks/charisworks-service-go/mail"
+	"github.com/charisworks/charisworks-service-go/meilisearch"
 	"github.com/charisworks/charisworks-service-go/strapi"
 	_stripe "github.com/charisworks/charisworks-service-go/stripe"
 	"github.com/charisworks/charisworks-service-go/util"
@@ -162,7 +163,7 @@ Quantity: %d
 	if err := mail.SendEmail(billing["email"], "ご購入ありがとうございます",
 		mail.PurchasedCustomerEmailFactory(
 			billing["name"],
-			trId,
+			transaction.Data[0].Attributes.TransactionID,
 			transaction.Data[0].Attributes.Item.Data.Attributes.Name,
 			transaction.Data[0].Attributes.Item.Data.Attributes.Price,
 			transaction.Data[0].Attributes.Quantity,
@@ -207,6 +208,17 @@ func checkoutSessionExpiredHandler(event stripe.Event) (err error) {
 	if err = strapi.CheckoutSessionStatusRegister(strconv.Itoa(transaction.Data[0].ID), strapi.Cancelled); err != nil {
 		return err
 	}
+	item, err := meilisearch.GetItemByID(strconv.Itoa(transaction.Data[0].Attributes.Item.Data.Id))
+	if err != nil {
+		return err
+	}
+	item.Stock += transaction.Data[0].Attributes.Quantity
+	items := []meilisearch.Item{}
+	items = append(items, *item)
+	if err := meilisearch.RegisterItemToMeilisearch(items); err != nil {
+		return err
+	}
+
 	return nil
 }
 

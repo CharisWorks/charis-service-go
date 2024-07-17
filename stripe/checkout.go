@@ -15,7 +15,7 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, csId strin
 	stripe.Key = os.Getenv("STRIPE_SECRET_API_KEY")
 	params := &stripe.CheckoutSessionParams{
 		ExpiresAt:  stripe.Int64(now.Add(30 * time.Minute).Unix()),
-		SuccessURL: stripe.String("https://example.com/success"),
+		SuccessURL: stripe.String("https://beta.charis.works"),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				Price:    stripe.String(priceId),

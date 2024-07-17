@@ -28,6 +28,10 @@ func CORS(r *gin.Engine) {
 			"http://strapi:1337",
 			"http://localhost:1337",
 			"http://localhost:3000",
+			"https://beta.charis.works",
+			"https://search.charis.works",
+			"https://testapi.charis.works",
+			"http://next:3000",
 		},
 		// アクセス許可するHTTPメソッド
 		AllowMethods: []string{

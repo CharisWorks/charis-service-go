@@ -34,7 +34,9 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, csId strin
 				},
 			},
 		},
-
+		AutomaticTax: &stripe.CheckoutSessionAutomaticTaxParams{
+			Enabled: stripe.Bool(true),
+		},
 		BillingAddressCollection: stripe.String(string(stripe.CheckoutSessionBillingAddressCollectionRequired)),
 		Mode:                     stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}

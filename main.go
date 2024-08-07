@@ -12,6 +12,7 @@ import (
 
 func main() {
 	r := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
 	CORS(r)
 	h := handler.NewHandler(r)
 	meilisearch.InitMeilisearch()
@@ -25,13 +26,11 @@ func CORS(r *gin.Engine) {
 	r.Use(cors.New(cors.Config{
 		// アクセス許可するオリジン
 		AllowOrigins: []string{
-			"http://strapi:1337",
-			"http://localhost:1337",
-			"http://localhost:3000",
 			"https://beta.charis.works",
 			"https://search.charis.works",
-			"https://testapi.charis.works",
 			"http://next:3000",
+			"https://api.charis.works",
+			"https://charis.works",
 		},
 		// アクセス許可するHTTPメソッド
 		AllowMethods: []string{

@@ -137,65 +137,67 @@ Quantity: %d
 	if err != nil {
 		return err
 	}
+	if transaction.Data[0].Attributes.State != "paid" {
+		if err := mail.SendEmail(util.ADMIN_EMAIL, "購入通知",
+			mail.PurchasedAdminEmailFactory(
+				billing["name"],
+				billing["email"],
+				address["postal_code"],
+				address["state"],
+				address["city"],
+				address["line1"],
+				address["line2"],
+				transaction.Data[0].Attributes.Item.Data.Attributes.Name,
+				transaction.Data[0].Attributes.Item.Data.Attributes.Price,
+				transaction.Data[0].Attributes.Quantity,
+				transaction.Data[0].Attributes.CreatedAt,
+			)); err != nil {
+			return err
+		}
+		if err := mail.SendEmail(billing["email"], "ご購入ありがとうございます",
+			mail.PurchasedCustomerEmailFactory(
+				billing["name"],
+				transaction.Data[0].Attributes.TransactionID,
+				transaction.Data[0].Attributes.Item.Data.Attributes.Name,
+				transaction.Data[0].Attributes.Item.Data.Attributes.Price,
+				transaction.Data[0].Attributes.Quantity,
+				util.SHIPPING_FEE,
+				transaction.Data[0].Attributes.CreatedAt,
+				address["postal_code"],
+				address["state"],
+				address["city"],
+				address["line1"],
+				address["line2"],
+				billing["email"],
+			)); err != nil {
+			return err
+		}
+		if err := mail.SendEmail(item.Data.Attributes.Worker.Data.Attributes.Email, "出品された商品が購入されました",
+			mail.PurchasedWorkerEmailFactory(
+				item.Data.Attributes.Worker.Data.Attributes.UserName,
+				address["postal_code"],
+				address["state"],
+				address["city"],
+				address["line1"],
+				address["line2"],
+				transaction.Data[0].Attributes.Item.Data.Attributes.Name,
+				transaction.Data[0].Attributes.Item.Data.Attributes.Price,
+				transaction.Data[0].Attributes.Quantity,
+				int(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price)*(1-util.MARGIN-util.STRIPE_MARGIN)),
+				transaction.Data[0].Attributes.CreatedAt,
+			)); err != nil {
+			return err
+		}
+		trId, err := _stripe.Transfer(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price*transaction.Data[0].Attributes.Quantity), item.Data.Attributes.Worker.Data.Attributes.StripeAccountID, transaction.Data[0].Attributes.TransactionID)
+		if err != nil {
+			return err
+		}
 
-	if err := mail.SendEmail(util.ADMIN_EMAIL, "購入通知",
-		mail.PurchasedAdminEmailFactory(
-			billing["name"],
-			billing["email"],
-			address["postal_code"],
-			address["state"],
-			address["city"],
-			address["line1"],
-			address["line2"],
-			transaction.Data[0].Attributes.Item.Data.Attributes.Name,
-			transaction.Data[0].Attributes.Item.Data.Attributes.Price,
-			transaction.Data[0].Attributes.Quantity,
-			transaction.Data[0].Attributes.CreatedAt,
-		)); err != nil {
-		return err
-	}
-	if err := mail.SendEmail(billing["email"], "ご購入ありがとうございます",
-		mail.PurchasedCustomerEmailFactory(
-			billing["name"],
-			transaction.Data[0].Attributes.TransactionID,
-			transaction.Data[0].Attributes.Item.Data.Attributes.Name,
-			transaction.Data[0].Attributes.Item.Data.Attributes.Price,
-			transaction.Data[0].Attributes.Quantity,
-			util.SHIPPING_FEE,
-			transaction.Data[0].Attributes.CreatedAt,
-			address["postal_code"],
-			address["state"],
-			address["city"],
-			address["line1"],
-			address["line2"],
-			billing["email"],
-		)); err != nil {
-		return err
-	}
-	if err := mail.SendEmail(item.Data.Attributes.Worker.Data.Attributes.Email, "出品された商品が購入されました",
-		mail.PurchasedWorkerEmailFactory(
-			item.Data.Attributes.Worker.Data.Attributes.UserName,
-			address["postal_code"],
-			address["state"],
-			address["city"],
-			address["line1"],
-			address["line2"],
-			transaction.Data[0].Attributes.Item.Data.Attributes.Name,
-			transaction.Data[0].Attributes.Item.Data.Attributes.Price,
-			transaction.Data[0].Attributes.Quantity,
-			int(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price)*(1-util.MARGIN-util.STRIPE_MARGIN)),
-			transaction.Data[0].Attributes.CreatedAt,
-		)); err != nil {
-		return err
-	}
-	trId, err := _stripe.Transfer(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price*transaction.Data[0].Attributes.Quantity), item.Data.Attributes.Worker.Data.Attributes.StripeAccountID, transaction.Data[0].Attributes.TransactionID)
-	if err != nil {
-		return err
+		if err := strapi.CheckoutSessionTransferRegister(strconv.Itoa(transaction.Data[0].ID), trId); err != nil {
+			return err
+		}
 	}
 
-	if err := strapi.CheckoutSessionTransferRegister(strconv.Itoa(transaction.Data[0].ID), trId); err != nil {
-		return err
-	}
 	return nil
 }
 

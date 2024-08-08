@@ -188,6 +188,9 @@ Quantity: %d
 			)); err != nil {
 			return err
 		}
+
+	}
+	if transaction.Data[0].Attributes.TransferID == "" {
 		trId, err := _stripe.Transfer(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price*transaction.Data[0].Attributes.Quantity), item.Data.Attributes.Worker.Data.Attributes.StripeAccountID, transaction.Data[0].Attributes.TransactionID)
 		if err != nil {
 			return err

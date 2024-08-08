@@ -137,7 +137,7 @@ Quantity: %d
 	if err != nil {
 		return err
 	}
-	if transaction.Data[0].Attributes.State != "paid" {
+	if transaction.Data[0].Attributes.Status != "paid" {
 		if err := mail.SendEmail(util.ADMIN_EMAIL, "購入通知",
 			mail.PurchasedAdminEmailFactory(
 				billing["name"],
@@ -188,9 +188,8 @@ Quantity: %d
 			)); err != nil {
 			return err
 		}
-
 	}
-	if transaction.Data[0].Attributes.TransferID == "" {
+	if transaction.Data[0].Attributes.TransferID == nil {
 		trId, err := _stripe.Transfer(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price*transaction.Data[0].Attributes.Quantity), item.Data.Attributes.Worker.Data.Attributes.StripeAccountID, transaction.Data[0].Attributes.TransactionID)
 		if err != nil {
 			return err

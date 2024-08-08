@@ -137,13 +137,7 @@ Quantity: %d
 	if err != nil {
 		return err
 	}
-	trId, err := _stripe.Transfer(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price*transaction.Data[0].Attributes.Quantity), item.Data.Attributes.Worker.Data.Attributes.StripeAccountID, transaction.Data[0].Attributes.TransactionID)
-	if err != nil {
-		return err
-	}
-	if err := strapi.CheckoutSessionTransferRegister(strconv.Itoa(transaction.Data[0].ID), trId); err != nil {
-		return err
-	}
+
 	if err := mail.SendEmail(util.ADMIN_EMAIL, "購入通知",
 		mail.PurchasedAdminEmailFactory(
 			billing["name"],
@@ -192,6 +186,14 @@ Quantity: %d
 			int(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price)*(1-util.MARGIN)),
 			transaction.Data[0].Attributes.CreatedAt,
 		)); err != nil {
+		return err
+	}
+	trId, err := _stripe.Transfer(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price*transaction.Data[0].Attributes.Quantity), item.Data.Attributes.Worker.Data.Attributes.StripeAccountID, transaction.Data[0].Attributes.TransactionID)
+	if err != nil {
+		return err
+	}
+
+	if err := strapi.CheckoutSessionTransferRegister(strconv.Itoa(transaction.Data[0].ID), trId); err != nil {
 		return err
 	}
 	return nil

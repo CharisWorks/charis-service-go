@@ -183,7 +183,7 @@ Quantity: %d
 			transaction.Data[0].Attributes.Item.Data.Attributes.Name,
 			transaction.Data[0].Attributes.Item.Data.Attributes.Price,
 			transaction.Data[0].Attributes.Quantity,
-			int(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price)*(1-util.MARGIN)),
+			int(float64(transaction.Data[0].Attributes.Item.Data.Attributes.Price)*(1-util.MARGIN-util.STRIPE_MARGIN)),
 			transaction.Data[0].Attributes.CreatedAt,
 		)); err != nil {
 		return err

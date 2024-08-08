@@ -11,6 +11,7 @@ var (
 	// Stripe
 	STRIPE_SECRET_API_KEY = os.Getenv("STRIPE_SECRET_API_KEY")
 	STRIPE_API_KEY        = os.Getenv("STRIPE_API_KEY")
+	STRIPE_MARGIN         = 0.035
 
 	// Strapi
 	STRAPI_JWT = os.Getenv("STRAPI_JWT")

@@ -18,7 +18,7 @@ func Transfer(amount float64, stripeAccountId string, transactionId string) (tra
 			amount: %v
 			stripeID: %v
 			transactionId: %v
-			`, float64(amount)*(1-util.MARGIN), stripeAccountId, transactionId,
+			`, float64(amount)*(1-util.MARGIN-util.STRIPE_MARGIN), stripeAccountId, transactionId,
 		),
 	)
 

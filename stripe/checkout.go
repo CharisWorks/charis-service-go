@@ -16,7 +16,7 @@ func CreateCheckout(priceId string, quantity int) (paymentUrl string, csId strin
 	params := &stripe.CheckoutSessionParams{
 		Locale:     stripe.String("ja"),
 		ExpiresAt:  stripe.Int64(now.Add(30 * time.Minute).Unix()),
-		SuccessURL: stripe.String("https://beta.charis.works"),
+		SuccessURL: stripe.String("https://charis.works"),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				Price:    stripe.String(priceId),

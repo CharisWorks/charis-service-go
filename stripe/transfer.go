@@ -23,7 +23,7 @@ func Transfer(amount float64, stripeAccountId string, transactionId string) (tra
 	)
 
 	params := &stripe.TransferParams{
-		Amount:      stripe.Int64(int64(int(amount*(1-util.MARGIN)) + util.SHIPPING_FEE)),
+		Amount:      stripe.Int64(int64(int(amount*(1-util.MARGIN-util.STRIPE_MARGIN)) + util.SHIPPING_FEE)),
 		Currency:    stripe.String(string(stripe.CurrencyJPY)),
 		Destination: stripe.String(stripeAccountId),
 		Description: stripe.String(transactionId),
